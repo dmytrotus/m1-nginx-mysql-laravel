@@ -1,0 +1,50 @@
+version: '3.9'
+
+networks:
+    nginx-php74-mysql-laravel:
+
+services:
+
+    # nginx
+    nginx-service:
+        image: nginx:stable-alpine
+        container_name: nginx-container
+        ports:
+            - "9999:80"
+        volumes:
+            - ../yourprojectpath/yourprojectpath:/var/www/project
+            - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - php74-service
+            - mysql
+        networks:
+            - nginx-php74-mysql-laravel
+
+    # php
+    php74-service:
+        build:
+            context: .
+            dockerfile: ./php/Dockerfile
+        container_name: php74-container
+        ports:
+            - "9025:9000"
+        volumes:
+            - ../yourprojectpath/yourprojectpath:/var/www/project
+            - ./php/php.ini:/usr/local/etc/php/php.ini:ro
+        networks:
+            - nginx-php74-mysql-laravel
+
+    # mysql
+    mysql:
+        image: mysql
+        container_name: mysql
+        ports:
+            - "3336:3306"
+        volumes:
+            - ./mysql:/var/lib/mysql
+        command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+        networks:
+            - nginx-php74-mysql-laravel
